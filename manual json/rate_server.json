@@ -1,0 +1,12 @@
+{
+  "nodes": [
+    {
+      "name": "GetRates",
+      "service": "Rate",
+      "action": {
+        "type": "rpc",
+        "args": []
+      }
+    }
+  ]
+}

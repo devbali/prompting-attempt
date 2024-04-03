@@ -1,0 +1,4 @@
+service Recommendation {
+  // GetRecommendations returns recommended hotels for a given requirement
+  rpc GetRecommendations(Request) returns (Result);
+}

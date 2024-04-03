@@ -1,0 +1,244 @@
+You are a code static analysis tool.
+You read source code and extract a JSON object from it that describes.
+There are a few examples given, then a source code for which you must produce a derived object.
+The grammar of the object type is as follows:
+ - The top level should be a single key of "nodes" which has the value of an array of Node object types
+ - Each node will have a name, a "service" name (an identifier of which file it is coming from), an empty annotations array and an action key with an Action object
+ - An Action object will have a type attribute, with strictly one of "rpc", "min", "max", "seq" or "external rpc" and an "args" object, which should be a list of other valid Action objects
+ - "rpc" means a function that has some functionality but does not call any other external functions
+ - "min" means a race between many other actions
+ - "external rpc" is the invokation of an external function or rpc
+ - "max" means waiting for the completion of multiple external functions or rpcs launched at the same time
+ - "seq" means a sequence of external rpc invokations
+----
+Source Code from file Flight.py:
+```
+from compiler import decorators
+
+@decorators.service
+class Flight(object):
+    def __init__(self):
+        self.flights = {} # type: Persistent[dict]
+
+    async def reserve_flight(self, flight_id, user_id):
+        ## Retrieve the hotel from the database
+        flight = self.flights[flight_id]
+
+        ## If there is capacity add the user in the hotel clients
+        if flight["capacity"] > 0:
+            flight["clients"].append(user_id)
+            flight["capacity"] -= 1
+            self.flights[flight_id] = flight
+            return True
+        else:
+            return False
+
+    async def add_flight(self, flight_id, capacity):
+        self.flights[flight_id] = {"flight_id": flight_id,
+                                   "clients": [],
+                                   "capacity": capacity}
+```
+
+Derived Object:
+{
+  "nodes": [
+      {
+          "name": "reserve_flight",
+          "service": "Flight",
+          "action": {
+              "type": "rpc",
+              "args": []
+          },
+          "annotations": []
+      },
+      {
+          "name": "add_flight",
+          "service": "Flight",
+          "action": {
+              "type": "rpc",
+              "args": []
+          },
+          "annotations": []
+      }
+  ]
+}
+
+Source Code from file Hotel.py:
+```
+from compiler import decorators
+
+from runtime.transaction_exception import TransactionException
+
+@decorators.service
+class Frontend(object):
+    def __init__(self):
+        pass
+
+    async def req(self, user_id, flight_id, hotel_id):
+        i = 0
+        retry = True
+        while retry:
+            # print("Trying to perform transaction:", i)
+            i += 1
+            try:
+                ## Begin a transaction
+                BeginTx()
+                
+                ## Try to reserve a hotel
+                hotel_fut = AsyncInvoke('Hotel', 'reserve_hotel', hotel_id, user_id)
+                
+                ## Try to reserve a flight
+                flight_fut = AsyncInvoke('Flight', 'reserve_flight', flight_id, user_id)
+
+                hotel_ret, flight_ret = await WaitAll(hotel_fut, flight_fut)
+                retry = False
+            except TransactionException as e:
+                ## This catches transaction failures (and not aborts)
+                retry = True
+
+        ## If the hotel reservation failed, abort the transaction and exit
+        if not hotel_ret:
+            AbortTxNoExc()
+            return (hotel_ret, "Hotel Reservation Failed")
+        
+        ## If the hotel reservation failed, abort the transaction and exit
+        if not flight_ret:
+            AbortTxNoExc()
+            return (flight_ret, "Flight Reservation Failed")
+        
+        ## Commit the transaction if both succeeded
+        CommitTx()
+
+        ## Place the order
+        SyncInvoke('Order', 'place_order', user_id, flight_id, hotel_id)
+        
+        return (True, "Order Successful")
+
+```
+
+Derived Object:
+{
+  "nodes": [
+    {
+      "name": "req",
+      "service": "Frontend",
+      "action": {
+        "type": "seq",
+        "args": [
+            {
+                "type": "max",
+                "args": [
+                    {
+                        "type": "external rpc",
+                        "args": ["Hotel.reserve_hotel"]
+                    },
+                    {
+                        "type": "external rpc",
+                        "args": ["Flight.add_flight"]
+                    }
+                    
+                ]
+            },
+            {
+                "type": "external rpc",
+                "args": [
+                    "Order.place_order"
+                ]
+            }
+            
+        ]
+      },
+      "annotations": []
+    }
+  ]
+}
+
+Source Code from file Hotel.py:
+```
+from compiler import decorators
+
+@decorators.service
+class Hotel(object):
+    def __init__(self):
+        self.hotels = {} # type: Persistent[dict]
+
+    async def reserve_hotel(self, hotel_id, user_id):
+        ## Retrieve the hotel from the database
+        hotel = self.hotels[hotel_id]
+
+        ## If there is capacity add the user in the hotel clients
+        if hotel["capacity"] > 0:
+            hotel["clients"].append(user_id)
+            hotel["capacity"] -= 1
+            self.hotels[hotel_id] = hotel
+            return True
+        else:
+            return False
+
+    async def add_hotel(self, hotel_id, capacity):
+        self.hotels[hotel_id] = {"hotel_id": hotel_id,
+                                 "clients": [],
+                                 "capacity": capacity}
+```
+
+Derived Object:
+{
+  "nodes": [
+    {
+      "name": "reserve_hotel",
+      "service": "Hotel",
+      "action": {
+          "type": "rpc"
+      },
+      "annotations": []
+    },
+    {
+      "name": "add_hotel",
+      "service": "Hotel",
+      "action": {
+          "type": "rpc"
+      }
+    }
+  ]
+}
+
+Source Code from file Order.py:
+```
+from uuid import uuid4
+
+from compiler import decorators
+
+@decorators.service
+class Order(object):
+    def __init__(self):
+        self.orders = {} # type: Persistent[dict]
+
+    async def place_order(self, user_id, flight_id, hotel_id):
+        ## TODO: For this to be totally correct, we need to log non-deterministic calls
+        ##       like uuid4.
+        order_id = str(uuid4())
+        self.orders[order_id] = { "order_id": order_id, 
+                                  "flight_id": flight_id,
+                                  "hotel_id": hotel_id, 
+                                  "user_id": user_id}
+```
+
+Derived Object:
+{
+  "nodes": [
+    {
+      "name": "place_order",
+      "service": "Order",
+      "action": {
+          "type": "rpc"
+      }
+    }
+  ]
+}
+
+Source Code from file $$$NAMEHERE$$$:
+```
+$$$CODEHERE$$$
+```
+
+Derived Object:

@@ -1,0 +1,4 @@
+service Search {
+  rpc Nearby(NearbyRequest) returns (SearchResult);
+  // rpc City(CityRequest) returns (SearchResult);
+}

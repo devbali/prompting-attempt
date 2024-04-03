@@ -1,0 +1,68 @@
+
+{
+  "nodes": [
+    {
+      "name": "searchHandler",
+      "service": "Frontend",
+      "action": {
+        "type": "seq",
+        "args": [
+          {
+            "type": "external rpc",
+            "args": ["Search.Nearby"]
+          },
+          {
+            "type": "external rpc",
+            "args": ["Reservation.CheckAvailability"]
+          },
+          {
+            "type": "external rpc",
+            "args": ["Profile.GetProfiles"]
+          }
+        ]
+      }
+    },
+    {
+      "name": "recommendHandler",
+      "service": "Frontend",
+      "action": {
+        "type": "seq",
+        "args": [
+          {
+            "type": "external rpc",
+            "args": ["Recommendation.GetRecommendations"]
+          },
+          {
+            "type": "external rpc",
+            "args": ["Profile.GetProfiles"]
+          }
+        ]
+      }
+    },
+    {
+      "name": "userHandler",
+      "service": "Frontend",
+      "action": {
+        "type": "external rpc",
+        "args": ["User.CheckUser"]
+      }
+    },
+    {
+      "name": "reservationHandler",
+      "service": "Frontend",
+      "action": {
+        "type": "seq",
+        "args": [
+          {
+            "type": "external rpc",
+            "args": ["User.CheckUser"]
+          },
+          {
+            "type": "external rpc",
+            "args": ["Reservation.MakeReservation"]
+          }
+        ]
+      }
+    }
+  ]
+}

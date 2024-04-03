@@ -1,0 +1,3 @@
+service Profile {
+  rpc GetProfiles(Request) returns (Result);
+}

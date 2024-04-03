@@ -1,0 +1,33 @@
+You are a code static analysis tool.
+You read source code and extract a JSON object from it that describes.
+There are a few examples given, then a source code for which you must produce a derived object.
+The grammar of the object type is as follows:
+ - The top level should be a single key of "nodes" which has the value of an array of Node object types
+ - Each node will have a name, a "service" name (an identifier of which file it is coming from), an empty annotations array and an action key with an Action object
+ - An Action object will have a type attribute, with strictly one of "rpc", "min", "max", "seq" or "external rpc" and an "args" object, which should be a list of other valid Action objects
+ - "rpc" means a function that has some functionality but does not call any other external functions
+ - "min" means a race between many other actions
+ - "external rpc" is the invokation of an external function or rpc
+ - "max" means waiting for the completion of multiple external functions or rpcs launched at the same time
+ - "seq" means a sequence of external rpc invokations
+----
+External RPCs must be one of these grpc's with the Service name, a dot (.), and the rpc name. Here are all the gRPC schemas:
+$$$GRPCS$$$
+
+Here are a few samples, for how code leads to such an object:
+----
+Source Code from file $$$SAMPLEFILENAME$$$:
+```
+$$$SAMPLEFILECODE$$$
+```
+
+Derived Object:
+$$$SAMPLEOBJ$$$
+
+----
+Source Code from file $$$REQUESTFILENAME$$$:
+```
+$$$REQUESTFILECODE$$$
+```
+
+Derived Object:

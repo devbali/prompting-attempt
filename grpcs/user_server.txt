@@ -1,0 +1,4 @@
+service User {
+  // CheckUser returns whether the username and password are correct
+  rpc CheckUser(Request) returns (Result);
+}

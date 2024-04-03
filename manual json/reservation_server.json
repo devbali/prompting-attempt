@@ -1,0 +1,20 @@
+{
+  "nodes": [
+    {
+      "name": "MakeReservation",
+      "service": "Reservation",
+      "action": {
+        "type": "rpc",
+        "args": []
+      }
+    },
+    {
+      "name": "CheckAvailability",
+      "service": "Reservation",
+      "action": {
+        "type": "rpc",
+        "args": []
+      }
+    }
+  ]
+}

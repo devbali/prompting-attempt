@@ -1,0 +1,12 @@
+{
+  "nodes": [
+    {
+      "name": "GetProfiles",
+      "service": "Profile",
+      "action": {
+        "type": "rpc",
+        "args": []
+      }
+    }
+  ]
+}

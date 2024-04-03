@@ -1,0 +1,6 @@
+service Reservation {
+  // MakeReservation makes a reservation based on given information
+  rpc MakeReservation(Request) returns (Result);
+  // CheckAvailability checks if given information is available
+  rpc CheckAvailability(Request) returns (Result);
+}

@@ -1,0 +1,4 @@
+searchHandler: seq(external Search.Nearby, external Reservation.CheckAvailability, external Profile.GetProfiles)
+recommendHandler: seq(external Recommendation.GetRecommendations, external Profile.GetProfiles)
+userHandler: external User.CheckUser
+reservationHandler: seq(external User.CheckUser, external Reservation.MakeReservation)

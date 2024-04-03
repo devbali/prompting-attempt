@@ -1,0 +1,14 @@
+{
+  "nodes": [
+    {
+      "name": "Nearby",
+      "service": "Search",
+      "action": {
+        "type": "external rpc",
+        "args": [
+          "Geo.Nearby"
+        ]
+      }
+    }
+  ]
+}

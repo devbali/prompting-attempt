@@ -1,0 +1,2 @@
+MakeReservation: rpc
+CheckAvailability: rpc

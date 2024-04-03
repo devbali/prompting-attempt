@@ -1,0 +1,12 @@
+{
+  "nodes": [
+    {
+      "name": "Nearby",
+      "service": "Geo",
+      "action": {
+        "type": "rpc",
+        "args": []
+      }
+    }
+  ]
+}
